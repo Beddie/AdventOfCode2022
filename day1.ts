@@ -1,25 +1,23 @@
 import { readFileSync } from "fs";
-const puzzlePath = "puzzleinput/day1_1.txt"
+const puzzlePath = "puzzleinput/day1.txt";
 const puzzleString: string = readFileSync(puzzlePath).toString();
-const puzzleInput: string[] = puzzleString.split("/n");
+const puzzleInputPrepare1: string[] = puzzleString.split("\n\n");
 
 class Elf {
-    calories: string[]
+    constructor(puzzleArray: string[]) {
+        const calories = puzzleArray.map(cal => parseInt(cal));
+        this.totalCalories = calories.reduce((sum, current) => sum + current, 0);
+    }
+    public totalCalories: number;
 }
 
-let elves: Elf[] = Elf[0];
+const puzzleInput: Elf[] = puzzleInputPrepare1.map((lines) => new Elf(lines.split("\n")));
 
-//const Elves: string[] = puzzleInput.map((element) => element.);
-console.log(puzzleInput);
-let elf = new Elf;
-elves.push(elf);
-puzzleInput.forEach(line => {
-    if (line.length != 0){
-        elf.calories.push(line);
-    }
-    else {
-        elf = new Elf;
-        elves.push(elf);
-    }
-});
+const answer1 = Math.max(...puzzleInput.map(elf => elf.totalCalories));
+console.log(answer1);
 
+const answer2 = puzzleInput
+                    .sort((elf1,elf2) => elf2.totalCalories - elf1.totalCalories)
+                    .slice(0,3)
+                    .reduce((sum, elf) => sum + elf.totalCalories, 0);
+console.log(answer2);

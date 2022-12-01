@@ -3,5 +3,6 @@
         "target": "ES5"
         ,"module" : "commonJS"
         ,"outDir": "out"
+        ,"sourceMap": true
     }
 }
