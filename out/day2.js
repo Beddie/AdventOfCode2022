@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var fs_1 = require("fs");
-var puzzlePath = "puzzleinput/day2.txt";
-var puzzleString = (0, fs_1.readFileSync)(puzzlePath).toString();
-var puzzleInputPrepare1 = puzzleString.split("\n");
+const fs_1 = require("fs");
+const puzzlePath = "puzzleinput/day2.txt";
+const puzzleString = (0, fs_1.readFileSync)(puzzlePath).toString();
+const puzzleInputPrepare1 = puzzleString.split("\n");
 var Hand;
 (function (Hand) {
     Hand[Hand["Rock"] = 1] = "Rock";
@@ -16,20 +16,24 @@ var Result;
     Result[Result["Draw"] = 3] = "Draw";
     Result[Result["Win"] = 6] = "Win";
 })(Result || (Result = {}));
-var Match = /** @class */ (function () {
-    function Match(puzzleArray) {
+class Match {
+    constructor(puzzleArray) {
         this.elf = this.getHand(puzzleArray[0]);
         this.bes = this.getHand(puzzleArray[1]);
         this.score = this.bes + this.getResult(this.bes, this.elf);
         //partB
-        var goal = this.getGoal(puzzleArray[1]);
+        const goal = this.getGoal(puzzleArray[1]);
         this.goalScore = goal + this.getGoalHand(goal, this.elf);
     }
-    Match.prototype.matchScore = function () { return this.score; };
+    elf;
+    bes;
+    score;
+    goalScore;
+    matchScore() { return this.score; }
     ;
-    Match.prototype.matchGoalScore = function () { return this.goalScore; };
+    matchGoalScore() { return this.goalScore; }
     ;
-    Match.prototype.getHand = function (char) {
+    getHand(char) {
         switch (char) {
             case 'X':
             case 'A':
@@ -41,8 +45,8 @@ var Match = /** @class */ (function () {
             case 'Z':
                 return Hand.Sciccors;
         }
-    };
-    Match.prototype.getGoal = function (char) {
+    }
+    getGoal(char) {
         switch (char) {
             case 'X':
                 return Result.Lose;
@@ -51,8 +55,8 @@ var Match = /** @class */ (function () {
             case 'Z':
                 return Result.Win;
         }
-    };
-    Match.prototype.getResult = function (home, out) {
+    }
+    getResult(home, out) {
         if (home === out) {
             return Result.Draw;
         }
@@ -62,8 +66,8 @@ var Match = /** @class */ (function () {
             return Result.Lose;
         }
         return Result.Win;
-    };
-    Match.prototype.getGoalHand = function (goal, out) {
+    }
+    getGoalHand(goal, out) {
         if (goal === Result.Draw) {
             return out;
         }
@@ -87,12 +91,11 @@ var Match = /** @class */ (function () {
                     return Hand.Rock;
             }
         }
-    };
-    return Match;
-}());
-var puzzleInput = puzzleInputPrepare1.map(function (lines) { return new Match(lines.split(" ")); });
-var answer1 = puzzleInput.reduce(function (sum, match) { return sum + match.matchScore(); }, 0);
+    }
+}
+const puzzleInput = puzzleInputPrepare1.map((lines) => new Match(lines.split(" ")));
+const answer1 = puzzleInput.reduce((sum, match) => sum + match.matchScore(), 0);
 console.log(answer1);
-var answer2 = puzzleInput.reduce(function (sum, match) { return sum + match.matchGoalScore(); }, 0);
+const answer2 = puzzleInput.reduce((sum, match) => sum + match.matchGoalScore(), 0);
 console.log(answer2);
 //# sourceMappingURL=day2.js.map
