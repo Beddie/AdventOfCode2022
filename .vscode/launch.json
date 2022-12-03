@@ -12,7 +12,11 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/day2.ts",
+            // "runtimeArgs": [
+            //     "--harmony",
+            //     "--no-deprecation"
+            // ],
+            "program": "${workspaceFolder}/day3.ts",
             "preLaunchTask": "tsc: build - tsconfig.json",
             "outFiles": [
                 "${workspaceFolder}/out/*.js"
