@@ -1,203 +1,88 @@
 import { readFileSync } from "fs";
 const puzzlePath = "puzzleinput/day9.txt";
 
+enum Direction {
+    left = -1,
+    right = 1,
+    up = 2,
+    down = -2
+}
+
 enum Vector {
     leftOrDown = -1,
     rightOrUp = 1
 }
 
-class Tree {
-    constructor(x,y, val) {
-        this.x = x
-        this.y = y
-        this.height = parseInt(val)
-    }
-        x: number;
-        y: number;
-        public visible?: boolean;
-        public height: number;
-        public scenicViewNumber: number;
-}
 
-declare global {
-    interface Array<T> {
-        reverseMe(vector: Vector, part: number): Array<T>;
-    }
-}
+class Motion {
+    constructor(direction, val) {
+        switch (direction) {
+            case 'U':
+                this.direction = Direction.up
+                break;
+            case 'D':
+                this.direction = Direction.up
+                break;
+            case 'L':
+                this.direction = Direction.left
+                break;
+            case 'R':
+                this.direction = Direction.right
+                break;
+            default:
+                break;
 
-Array.prototype.reverseMe = function (vector: Vector, part: number) {
-    var _self = this as Array<Tree>;
-    return part == 1 ? vector == Vector.leftOrDown ? _self : _self.reverse() : vector == Vector.rightOrUp ? _self : _self.reverse()
-};
+        }
+         
+        this.value = parseInt(val)
+    }    
+    public direction: Direction;
+    public value: number;
+}
 
 async function day9(part:number, print: boolean) {
     let answer = 0
-    const trees = readFileSync(puzzlePath).toString().split('\n').map((y, yindex) => y.split('').map((x,xindex) => new Tree(xindex, yindex, x)));
+    const puzzleInput = readFileSync(puzzlePath).toString().split('\n')
+    const motions = puzzleInput.map(u => u.split(' ')).map((x,xindex) => new Motion(x[0],x[1]));
+    let Hx = 0;
+    let Hy = 0;
+    let Tx = 0;
+    let Ty = 0;
+    let vector: Vector
+    motions.forEach((motion) => 
+        {
+          
+            const vector = motion.direction == Direction.up || motion.direction == Direction.right ? Vector.rightOrUp : Vector.leftOrDown;
 
-    function visibleHorizontal(trees: Tree[][], tree: Tree, vector: Vector ): boolean {
-        if (!tree.visible){
-            const sliceXfrom = vector  == Vector.leftOrDown ? 0 : tree.x + 1
-            const sliceXto = vector  == Vector.leftOrDown ? tree.x  : trees[0].length 
-            if (sliceXfrom == sliceXto) return true 
+            for (let index = 0; vector == Vector.leftOrDown ? index > (motion.value * vector): index < (motion.value * vector); index+= vector) {
+                switch (motion.direction) {
+                    case Direction.up:
+                    case Direction.down:
+                        Hy += vector;
+                        break;
+                    case Direction.right:
+                    case Direction.left:
+                        Hx += vector;
+                        break;
+                    default:
+                        break;
+                    }
 
-            const allTrees = trees[tree.y].slice(sliceXfrom, sliceXto).reverseMe(vector, 1)
-            return allTrees.every((n) => n.height < tree.height);
-        }
-        return tree.visible
-    }
-
-    function visibleVertical(trees: Tree[][], tree: Tree, vector: Vector ): boolean {
-        if (!tree.visible){ 
-            const sliceYfrom = vector  == Vector.leftOrDown ? tree.y : 0
-            const sliceYto = vector  == Vector.leftOrDown ? 0 : trees.length;
-            if (sliceYfrom == sliceYto) return true; 
-
-            const allTrees = [...Array(trees.length).keys() ].filter(i => vector == Vector.leftOrDown ? tree.y > i : tree.y < i).map((t) => trees[t][tree.x]).reverseMe(vector, 1)
-
-            return allTrees.every((n) => n.height < tree.height);
-        }
-        return tree.visible
-    }
-
-
-    function scenicHorizontal(trees: Tree[][], tree: Tree, vector: Vector ): number {
-        const sliceXfrom = vector  == Vector.leftOrDown ? 0 : tree.x + 1
-        const sliceXto = vector  == Vector.leftOrDown ? tree.x  : trees[0].length 
-        if (sliceXfrom == sliceXto) return 0 
-
-        const allTrees = trees[tree.y].slice(sliceXfrom, sliceXto).reverseMe(vector, 2)
-
-        let scenicViews = 0;
-        let keepLooking = true;
-        allTrees.forEach((spottedTree,i) => {
-            if (keepLooking)
-                if (spottedTree.height < tree.height) {
-                    scenicViews += 1
-                }
-                else {
-                    scenicViews += 1;
-                    keepLooking = false;
-                return;
-                }
-            });
-        
-        return scenicViews
-    }
-
-    function scenicVertical(trees: Tree[][], tree: Tree, vector: Vector ): number {
-        const sliceXfrom = vector  == Vector.leftOrDown ? 0 : tree.x + 1
-        const sliceXto = vector  == Vector.leftOrDown ? tree.x  : trees[0].length 
-        if (sliceXfrom == sliceXto) return 0;
-
-        const allTrees = [...Array(trees.length).keys() ].filter(i => vector == Vector.leftOrDown ? tree.y > i : tree.y < i).map((t) => trees[t][tree.x]).reverseMe(vector, 2)
-
-        let scenicViews = 0;
-        let keepLooking = true;
-        allTrees.forEach((spottedTree,i) => {
-            if (keepLooking)
-                if (spottedTree.height < tree.height) {
-                    scenicViews += 1
-                }
-                else {
-                    scenicViews += 1;
-                    keepLooking = false;
-                return;
-                }
-            });
-        
-        return scenicViews
-}
-
-
-    if (part == 1){
-        for (let y = 0; y < trees.length; y++) {
-            for (let x = 0; x < trees[y].length; x++) {
-                const tree = trees[y][x];
-                if (tree.visible) {
-                    return
-                }
-                tree.visible = visibleHorizontal(trees, tree, Vector.leftOrDown)
-                tree.visible = visibleHorizontal(trees, tree, Vector.rightOrUp)
-                tree.visible = visibleVertical(trees, tree, Vector.leftOrDown)
-                tree.visible = visibleVertical(trees, tree, Vector.rightOrUp)
-                }
+                console.log(`${motion.value} to ${Direction[motion.direction].toString()} \t:${Hx}-${Hy}/${index}`)
                 
             }
-    }
-    else {
-        let highestNumber = 0;
-
-        for (let y = 0; y < trees.length; y++) {
-            for (let x = 0; x < trees[y].length; x++) {
-                const tree = trees[y][x];
-                let scenicViewNumber = scenicHorizontal(trees, tree, Vector.leftOrDown)
-                scenicViewNumber *= scenicHorizontal(trees, tree, Vector.rightOrUp)
-                scenicViewNumber *= scenicVertical(trees, tree, Vector.leftOrDown)
-                scenicViewNumber *= scenicVertical(trees, tree, Vector.rightOrUp)
-                tree.scenicViewNumber = scenicViewNumber;
-                highestNumber = scenicViewNumber> highestNumber ? scenicViewNumber : highestNumber;
-                }
-                
+        
+            //y = motion.direction == Direction.up ?? 
+            
+            //if head moves 2 positions from tail then tail moves to previous position from head
         }
-        answer = highestNumber;
-    }
+    )
 
-    trees.reverse()
-
-    if (print) {
-        trees.reduce((treeRows, treeRow) => {
-            let treesHorizontal =  treeRow.reduce((trees,tree) => trees += tree.height,'');
-            treeRows += treesHorizontal
-            console.log(`${treesHorizontal}`);
-            return treeRows;
-            }
-        ,'')
-        console.log('')
-    }
     
-
-    if (part == 1) {
-        if (print) {
-            trees.reduce((treeRows, treeRow) => {
-                let treesHorizontal =  treeRow.reduce((trees,tree) => trees += (tree.visible ? 1 : 0),'');
-                treeRows += treesHorizontal
-                console.log(`${treesHorizontal}`);
-                return treeRows;
-                }
-            ,'')
-
-            trees.reduce((treeRows, treeRow) => {
-                let treesHorizontal =  treeRow.reduce((trees,tree) => trees += `${tree.x}-${tree.y}[${tree.height}]=${tree.visible ? "*" : " "}-`,'');
-                treeRows += treesHorizontal
-                console.log(`${treesHorizontal}`);
-                return treeRows;
-                }
-            ,'')
-        }
-
-        answer = trees.reduce((treeRows, treeRow) => {
-            let treesHorizontal =  treeRow.reduce((trees,tree) => trees += (tree.visible ? 1 : 0),0);
-            treeRows += treesHorizontal
-            return treeRows;
-            }
-        ,0)
-    }
-    else{
-
-        print ?? trees.reduce((treeRows, treeRow) => {
-            let treesHorizontal =  treeRow.reduce((trees,tree) => trees += `${tree.x}-${tree.y}[${tree.height}]=${tree.scenicViewNumber}/`,'');
-            treeRows += treesHorizontal
-            console.log(`${treesHorizontal}`);
-            return treeRows;
-            }
-        ,'')
-
-    }
-
     return answer
 }
 
 Promise.all([day9(1, true),day9(2, true)]).then((answer) => console.log(answer.join(', ')))
 
-//answer1 1693
-//answer2 422059
+//answer1 
+//answer2 
