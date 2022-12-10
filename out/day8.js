@@ -8,97 +8,159 @@ var Vector;
     Vector[Vector["rightOrUp"] = 1] = "rightOrUp";
 })(Vector || (Vector = {}));
 class Tree {
-    constructor(xx, yy, val) {
-        this.x = xx;
-        this.y = yy;
+    constructor(x, y, val) {
+        this.x = x;
+        this.y = y;
         this.height = parseInt(val);
     }
     x;
     y;
     visible;
     height;
+    scenicViewNumber;
 }
-Array.prototype.reverseMe = function (vector) {
+Array.prototype.reverseMe = function (vector, part) {
     var _self = this;
-    return vector == Vector.leftOrDown ? _self : _self.reverse();
+    return part == 1 ? vector == Vector.leftOrDown ? _self : _self.reverse() : vector == Vector.rightOrUp ? _self : _self.reverse();
 };
-async function day8(part) {
+async function day8(part, print) {
     let answer = 0;
     const trees = (0, fs_1.readFileSync)(puzzlePath).toString().split('\n').reverse().map((y, yindex) => y.split('').map((x, xindex) => new Tree(xindex, yindex, x)));
-    const width = trees[0].length;
-    const height = trees[0].length;
     function visibleHorizontal(trees, tree, vector) {
         if (!tree.visible) {
-            let sliceXfrom = vector == Vector.leftOrDown ? 0 : tree.x + 1;
-            let sliceXto = vector == Vector.leftOrDown ? tree.x : trees[0].length;
-            if (vector == Vector.leftOrDown && sliceXfrom == sliceXto)
+            const sliceXfrom = vector == Vector.leftOrDown ? 0 : tree.x + 1;
+            const sliceXto = vector == Vector.leftOrDown ? tree.x : trees[0].length;
+            if (sliceXfrom == sliceXto)
                 return true;
-            if (vector == Vector.rightOrUp && sliceXfrom == sliceXto)
-                return true;
-            let allTrees = trees[tree.y].slice(sliceXfrom, sliceXto).reverseMe(vector);
+            const allTrees = trees[tree.y].slice(sliceXfrom, sliceXto).reverseMe(vector, 1);
             return allTrees.every((n) => n.height < tree.height);
         }
         return tree.visible;
     }
     function visibleVertical(trees, tree, vector) {
         if (!tree.visible) {
-            let sliceYfrom = vector == Vector.leftOrDown ? tree.y : 0;
-            let sliceYto = vector == Vector.leftOrDown ? 0 : trees.length;
-            if (vector == Vector.leftOrDown && sliceYfrom == sliceYto)
+            const sliceYfrom = vector == Vector.leftOrDown ? tree.y : 0;
+            const sliceYto = vector == Vector.leftOrDown ? 0 : trees.length;
+            if (sliceYfrom == sliceYto)
                 return true;
-            if (vector == Vector.rightOrUp && sliceYfrom == sliceYto)
-                return true;
-            let allTrees = [...Array(trees.length).keys()].filter(i => vector == Vector.leftOrDown ? tree.y > i : tree.y < i).map((t) => trees[t][tree.x]).reverseMe(vector);
-            //let allTrees = Array.from((x) => )
-            //trees.reduce((traas,traa,y) => traas.push(traa[tree.x]))
+            const allTrees = [...Array(trees.length).keys()].filter(i => vector == Vector.leftOrDown ? tree.y > i : tree.y < i).map((t) => trees[t][tree.x]).reverseMe(vector, 1);
             return allTrees.every((n) => n.height < tree.height);
         }
         return tree.visible;
     }
-    for (let y = 0; y < trees.length; y++) {
-        for (let x = 0; x < trees[y].length; x++) {
-            const tree = trees[y][x];
-            if (tree.visible) {
-                return;
+    function scenicHorizontal(trees, tree, vector) {
+        const sliceXfrom = vector == Vector.leftOrDown ? 0 : tree.x + 1;
+        const sliceXto = vector == Vector.leftOrDown ? tree.x : trees[0].length;
+        if (sliceXfrom == sliceXto)
+            return 0;
+        const allTrees = trees[tree.y].slice(sliceXfrom, sliceXto).reverseMe(vector, 2);
+        let scenicViews = 0;
+        let keepLooking = true;
+        allTrees.forEach((spottedTree, i) => {
+            if (keepLooking)
+                if (spottedTree.height < tree.height) {
+                    scenicViews += 1;
+                }
+                else {
+                    scenicViews += 1;
+                    keepLooking = false;
+                    return;
+                }
+        });
+        return scenicViews;
+    }
+    function scenicVertical(trees, tree, vector) {
+        const sliceXfrom = vector == Vector.leftOrDown ? 0 : tree.x + 1;
+        const sliceXto = vector == Vector.leftOrDown ? tree.x : trees[0].length;
+        if (sliceXfrom == sliceXto)
+            return 0;
+        const allTrees = [...Array(trees.length).keys()].filter(i => vector == Vector.leftOrDown ? tree.y > i : tree.y < i).map((t) => trees[t][tree.x]).reverseMe(vector, 2);
+        let scenicViews = 0;
+        let keepLooking = true;
+        allTrees.forEach((spottedTree, i) => {
+            if (keepLooking)
+                if (spottedTree.height < tree.height) {
+                    scenicViews += 1;
+                }
+                else {
+                    scenicViews += 1;
+                    keepLooking = false;
+                    return;
+                }
+        });
+        return scenicViews;
+    }
+    if (part == 1) {
+        for (let y = 0; y < trees.length; y++) {
+            for (let x = 0; x < trees[y].length; x++) {
+                const tree = trees[y][x];
+                if (tree.visible) {
+                    return;
+                }
+                tree.visible = visibleHorizontal(trees, tree, Vector.leftOrDown);
+                tree.visible = visibleHorizontal(trees, tree, Vector.rightOrUp);
+                tree.visible = visibleVertical(trees, tree, Vector.leftOrDown);
+                tree.visible = visibleVertical(trees, tree, Vector.rightOrUp);
             }
-            let brake = x == 3 && y == 1;
-            tree.visible = visibleHorizontal(trees, tree, Vector.leftOrDown);
-            tree.visible = visibleHorizontal(trees, tree, Vector.rightOrUp);
-            tree.visible = visibleVertical(trees, tree, Vector.leftOrDown);
-            tree.visible = visibleVertical(trees, tree, Vector.rightOrUp);
         }
     }
+    else {
+        let highestNumber = 0;
+        for (let y = 0; y < trees.length; y++) {
+            for (let x = 0; x < trees[y].length; x++) {
+                const tree = trees[y][x];
+                let scenicViewNumber = scenicHorizontal(trees, tree, Vector.leftOrDown);
+                scenicViewNumber *= scenicHorizontal(trees, tree, Vector.rightOrUp);
+                scenicViewNumber *= scenicVertical(trees, tree, Vector.leftOrDown);
+                scenicViewNumber *= scenicVertical(trees, tree, Vector.rightOrUp);
+                tree.scenicViewNumber = scenicViewNumber;
+                highestNumber = scenicViewNumber > highestNumber ? scenicViewNumber : highestNumber;
+            }
+        }
+        answer = highestNumber;
+    }
     trees.reverse();
-    trees.reduce((treeRows, treeRow) => {
-        let treesHorizontal = treeRow.reduce((trees, tree) => trees += tree.height, '');
-        treeRows += treesHorizontal;
-        console.log(`${treesHorizontal}`);
-        return treeRows;
-    }, '');
-    console.log('');
-    trees.reduce((treeRows, treeRow) => {
-        let treesHorizontal = treeRow.reduce((trees, tree) => trees += (tree.visible ? 1 : 0), '');
-        treeRows += treesHorizontal;
-        console.log(`${treesHorizontal}`);
-        return treeRows;
-    }, '');
-    trees.reduce((treeRows, treeRow) => {
-        let treesHorizontal = treeRow.reduce((trees, tree) => trees += `${tree.x}-${tree.y}[${tree.height}]=${tree.visible ? "*" : " "}-`, '');
-        treeRows += treesHorizontal;
-        //console.log();
-        console.log(`${treesHorizontal}`);
-        return treeRows;
-    }, '');
-    answer = trees.reduce((treeRows, treeRow) => {
-        let treesHorizontal = treeRow.reduce((trees, tree) => trees += (tree.visible ? 1 : 0), 0);
-        treeRows += treesHorizontal;
-        //console.log();
-        //console.log(`${treesHorizontal}`);
-        return treeRows;
-    }, 0);
+    if (print) {
+        trees.reduce((treeRows, treeRow) => {
+            let treesHorizontal = treeRow.reduce((trees, tree) => trees += tree.height, '');
+            treeRows += treesHorizontal;
+            console.log(`${treesHorizontal}`);
+            return treeRows;
+        }, '');
+        console.log('');
+    }
+    if (part == 1) {
+        if (print) {
+            trees.reduce((treeRows, treeRow) => {
+                let treesHorizontal = treeRow.reduce((trees, tree) => trees += (tree.visible ? 1 : 0), '');
+                treeRows += treesHorizontal;
+                console.log(`${treesHorizontal}`);
+                return treeRows;
+            }, '');
+            trees.reduce((treeRows, treeRow) => {
+                let treesHorizontal = treeRow.reduce((trees, tree) => trees += `${tree.x}-${tree.y}[${tree.height}]=${tree.visible ? "*" : " "}-`, '');
+                treeRows += treesHorizontal;
+                console.log(`${treesHorizontal}`);
+                return treeRows;
+            }, '');
+        }
+        answer = trees.reduce((treeRows, treeRow) => {
+            let treesHorizontal = treeRow.reduce((trees, tree) => trees += (tree.visible ? 1 : 0), 0);
+            treeRows += treesHorizontal;
+            return treeRows;
+        }, 0);
+    }
+    else {
+        print ?? trees.reduce((treeRows, treeRow) => {
+            let treesHorizontal = treeRow.reduce((trees, tree) => trees += `${tree.x}-${tree.y}[${tree.height}]=${tree.scenicViewNumber}/`, '');
+            treeRows += treesHorizontal;
+            console.log(`${treesHorizontal}`);
+            return treeRows;
+        }, '');
+    }
     return answer;
 }
-Promise.all([day8(1)]).then((answer) => console.log(answer.join(', ')));
-//answer1 
-//answer2
+Promise.all([day8(1, true), day8(2, true)]).then((answer) => console.log(answer.join(', ')));
+//answer1 1693
+//answer2 422059
 //# sourceMappingURL=day8.js.map
