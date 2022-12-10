@@ -82,6 +82,7 @@ async function day7(part) {
         console.log(line);
         if (line[0] == "$") {
             if (line == "$ ls") {
+                // do nothing
             }
             else {
                 switch (line.slice(-1)) {
