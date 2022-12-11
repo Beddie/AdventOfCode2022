@@ -41,14 +41,16 @@ async function day9(part, print) {
     let answer = 0;
     const puzzleInput = (0, fs_1.readFileSync)(puzzlePath).toString().split('\n');
     const motions = puzzleInput.map(u => u.split(' ')).map((x, xindex) => new Motion(x[0], x[1]));
-    const headMovements = [];
-    const tailMovements = [];
-    let head = [0, 0];
-    let tail = [0, 0];
-    tailMovements.push([0, 0]);
-    let vector;
+    const knotMovements = [];
+    const knots = [];
+    let partIndex = part == 1 ? 1 : 9;
+    for (let index = 0; index < (part == 1 ? partIndex + 1 : partIndex + 1); index++) {
+        knots.push([0, 0]);
+        knotMovements.push([[0, 0]]);
+    }
     motions.forEach((motion) => {
         const vector = motion.direction == Direction.up || motion.direction == Direction.right ? Vector.rightOrUp : Vector.leftOrDown;
+        let head = knots[0];
         for (let index = 0; vector == Vector.leftOrDown ? index > (motion.value * vector) : index < (motion.value * vector); index += vector) {
             switch (motion.direction) {
                 case Direction.up:
@@ -63,45 +65,65 @@ async function day9(part, print) {
                     break;
             }
             let newPosition = [head[0], head[1]];
-            headMovements.push(newPosition);
-            let distanceX = Math.abs(head[0] - tail[0]);
-            let distanceY = Math.abs(head[1] - tail[1]);
-            let diagonal1place = distanceX == 1 && distanceY == 1;
-            if (!diagonal1place && distanceX + distanceY > 1) {
-                let tailx = headMovements[headMovements.length - 2][0];
-                let taily = headMovements[headMovements.length - 2][1];
-                tail[0] = tailx;
-                tail[1] = taily;
-                if (!tailMovements.find((tailxy) => tailxy[0] == tailx && tailxy[1] == taily)) {
-                    tailMovements.push([tailx, taily]);
+            knotMovements[0].push(newPosition);
+            for (let i = 1; i < knots.length; i++) {
+                let distanceX = Math.abs(knots[i - 1][0] - knots[i][0]);
+                let distanceY = Math.abs(knots[i - 1][1] - knots[i][1]);
+                let istouching = distanceX <= 1 && distanceY <= 1;
+                if (!istouching) {
+                    //straight
+                    if (distanceX == 2 && distanceY == 0) {
+                        knots[i][0] += (knots[i - 1][0] - knots[i][0]) / 2;
+                    }
+                    else if (distanceY == 2 && distanceX == 0) {
+                        knots[i][1] += (knots[i - 1][1] - knots[i][1]) / 2;
+                    }
+                    //diagnoal
+                    else if (distanceX == 2) {
+                        knots[i][0] += (knots[i - 1][0] - knots[i][0]) / 2;
+                        //move y towards head knot
+                        knots[i][1] += (knots[i - 1][1] - knots[i][1]) > 0 ? 1 : -1;
+                    }
+                    else if (distanceY == 2) {
+                        knots[i][1] += (knots[i - 1][1] - knots[i][1]) / 2;
+                        //move x towards head knot
+                        knots[i][0] += (knots[i - 1][0] - knots[i][0]) > 0 ? 1 : -1;
+                    }
+                    if (!knotMovements[partIndex].find((tailxy) => tailxy[0] == knots[partIndex][0] && tailxy[1] == knots[partIndex][1])) {
+                        knotMovements[partIndex].push([knots[partIndex][0], knots[partIndex][1]]);
+                    }
                 }
             }
-            //print ? drawGrid(head, tail, tailMovements) : null
+            print ? drawGrid(knots, knotMovements) : null;
         }
-        //y = motion.direction == Direction.up ?? 
-        //if head moves 2 positions from tail then tail moves to previous position from head
     });
-    print ? drawGrid(head, tail, tailMovements) : null;
-    return tailMovements.length;
+    answer = knotMovements[partIndex].length;
+    print ? drawGrid(knots, knotMovements) : null;
+    return answer;
 }
-Promise.all([day9(2, true)]).then((answer) => console.log(answer.join(', ')));
-function drawGrid(head, tail, tailMovements) {
-    let size = 80;
+Promise.all([day9(1, false), day9(2, false)]).then((answer) => console.log(answer.join(', ')));
+function drawGrid(knots, tailMovements) {
+    let knotMovements = knots.map((x, i) => [i, x]);
+    let size = 12;
     let grid = "";
+    let head = knots[0];
     for (let y = size; y > -size; y--) {
         for (let x = -size; x < size; x++) {
-            let tailSpot = tailMovements.find(tailxy => tailxy[0] == x && tailxy[1] == y);
+            let tailSpot = knotMovements.find(tailxy => tailxy.find(t => t[0] == x && t[1] == y));
             if (0 == y && 0 == x) {
-                grid += tailSpot ? "s" : "S";
+                grid += tailSpot ? tailSpot[0] : "S";
             }
             else if (x == head[0] && y == head[1]) {
-                grid += tailSpot ? "h" : "H";
+                grid += tailSpot ? tailSpot[0] : "H";
             }
-            else if (x == tail[0] && y == tail[1]) {
-                grid += "T";
+            else if (tailSpot && x == tailSpot[1][0] && y == tailSpot[1][1]) {
+                grid += tailSpot[0];
             }
             else if (tailSpot) {
                 grid += "*";
+            }
+            else if (tailSpot && x == tailSpot[1][0] && y == tailSpot[1][1]) {
+                grid += tailSpot[0];
             }
             else {
                 grid += ".";
@@ -110,9 +132,7 @@ function drawGrid(head, tail, tailMovements) {
         grid += "\n";
     }
     console.log(grid);
-    let breakje = head[0] == 1 && head[1] == 4;
-    //console.log(`${motion.value} to ${Direction[motion.direction].toString()} \t:${head[0]}-${head[1]}/${index}`)
 }
 //answer1 5907
-//answer2 
+//answer2 2303
 //# sourceMappingURL=day9.js.map
