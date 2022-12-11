@@ -45,6 +45,7 @@ async function day9(part, print) {
     const tailMovements = [];
     let head = [0, 0];
     let tail = [0, 0];
+    tailMovements.push([0, 0]);
     let vector;
     motions.forEach((motion) => {
         const vector = motion.direction == Direction.up || motion.direction == Direction.right ? Vector.rightOrUp : Vector.leftOrDown;
@@ -63,10 +64,8 @@ async function day9(part, print) {
             }
             let newPosition = [head[0], head[1]];
             headMovements.push(newPosition);
-            let distanceX = (head[0] < 0 ? head[0] * -1 : head[0]) - (tail[0] < 0 ? tail[0] * -1 : tail[0]);
-            distanceX = distanceX < 0 ? distanceX * -1 : distanceX;
-            let distanceY = (head[1] < 0 ? head[1] * -1 : head[1]) - (tail[1] < 0 ? tail[1] * -1 : tail[1]);
-            distanceY = distanceY < 0 ? distanceY * -1 : distanceY;
+            let distanceX = Math.abs(head[0] - tail[0]);
+            let distanceY = Math.abs(head[1] - tail[1]);
             let diagonal1place = distanceX == 1 && distanceY == 1;
             if (!diagonal1place && distanceX + distanceY > 1) {
                 let tailx = headMovements[headMovements.length - 2][0];
@@ -77,25 +76,29 @@ async function day9(part, print) {
                     tailMovements.push([tailx, taily]);
                 }
             }
-            drawGrid(head, tail, tailMovements);
+            //print ? drawGrid(head, tail, tailMovements) : null
         }
         //y = motion.direction == Direction.up ?? 
         //if head moves 2 positions from tail then tail moves to previous position from head
     });
-    return answer;
+    print ? drawGrid(head, tail, tailMovements) : null;
+    return tailMovements.length;
 }
-Promise.all([day9(1, true), day9(2, true)]).then((answer) => console.log(answer.join(', ')));
+Promise.all([day9(2, true)]).then((answer) => console.log(answer.join(', ')));
 function drawGrid(head, tail, tailMovements) {
-    let size = 8;
+    let size = 80;
     let grid = "";
     for (let y = size; y > -size; y--) {
         for (let x = -size; x < size; x++) {
             let tailSpot = tailMovements.find(tailxy => tailxy[0] == x && tailxy[1] == y);
-            if (x == head[0] && y == head[1]) {
+            if (0 == y && 0 == x) {
+                grid += tailSpot ? "s" : "S";
+            }
+            else if (x == head[0] && y == head[1]) {
                 grid += tailSpot ? "h" : "H";
             }
             else if (x == tail[0] && y == tail[1]) {
-                grid += tailSpot ? "t" : "T";
+                grid += "T";
             }
             else if (tailSpot) {
                 grid += "*";
@@ -110,6 +113,6 @@ function drawGrid(head, tail, tailMovements) {
     let breakje = head[0] == 1 && head[1] == 4;
     //console.log(`${motion.value} to ${Direction[motion.direction].toString()} \t:${head[0]}-${head[1]}/${index}`)
 }
-//answer1 
+//answer1 5907
 //answer2 
 //# sourceMappingURL=day9.js.map
