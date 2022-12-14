@@ -5,7 +5,7 @@ const puzzlePath = "puzzleinput/day12.txt";
 const puzzleOutputPath = "puzzleoutput/day12output.txt";
 async function day12(part, print) {
     let answer = 0;
-    let endPosition = [0, 0];
+    let endPosition = [];
     let startPositionPart1 = [];
     let startPositions = [];
     const puzzlePrepare = (0, fs_1.readFileSync)(puzzlePath).toString().split('\n');
@@ -147,23 +147,21 @@ async function day12(part, print) {
         let paths = [];
         let endpos = [endPosition[1], endPosition[0]];
         startPositions.forEach(sp => {
-            openSet = []; //array containing unevaluated grid points
-            closedSet = []; //array containing completely evaluated grid points
+            //TODO refactor vars below into class / own scope
+            openSet = [];
+            closedSet = [];
             path = [];
-            let whatisit = search(sp, endpos);
-            if (whatisit) {
-                paths.push(whatisit);
+            let searchedPath = search(sp, endpos);
+            if (searchedPath) {
+                paths.push(searchedPath);
             }
         });
         paths.sort((a, b) => a.length - b.length);
-        //answer = gridpoints.length - 1;
-        //drawGrid(hills, gridpoints)
         answer = paths[0].length - 1;
     }
     return answer;
 }
 function drawGrid(hills, gridpoints) {
-    // this.hillPathDistanceMap
     let grid = "";
     hills.forEach((hilly, y) => {
         hilly.forEach((hillx, x) => {
