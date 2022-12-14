@@ -43,7 +43,12 @@ async function day11(part:number, print: boolean) {
                 if (part == 1) { 
                     worryLevel = Math.floor(worryLevel/3)
                 }
-
+                // else{
+                //     worryLevel  = worryLevel % 9699690 
+                // }
+                // if (worryLevel == 0) {
+                //     monkeys[monkey.trueThrow].items.push(9699690)
+                // }
                 if (worryLevel % monkey.divisible== 0){
                     monkeys[monkey.trueThrow].items.push(worryLevel)
                 }
@@ -60,7 +65,7 @@ async function day11(part:number, print: boolean) {
             answer = twoActiveMockeys[0].countInspection * twoActiveMockeys[1].countInspection
             keepThrowingStuff = false;
         }
-        else if (print && part ==2 && (rounds == 20 || rounds % 1000 == 0)){
+        else if (print && part ==2 && (rounds == 20) || rounds % 1000 == 0) {
               drawGrid(monkeys);
           }
         else if (part ==2 && rounds == 10000){
@@ -73,7 +78,7 @@ async function day11(part:number, print: boolean) {
     return answer
 }
 
-Promise.all([day11(1,true)]).then((answer) => console.log(answer.join(', ')))
+Promise.all([day11(2,true)]).then((answer) => console.log(answer.join(', ')))
 
 
 function drawGrid(monkeys: Monkey[]) {
@@ -85,4 +90,4 @@ function drawGrid(monkeys: Monkey[]) {
     )
 }
 //answer1 56120
-//answer2 14463068816 to low
+//answer2 14463068816 and 3185962769 to low

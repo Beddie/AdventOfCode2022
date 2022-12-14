@@ -17,7 +17,7 @@
             //     "--harmony",
             //     "--no-deprecation"
             // ],
-            "program": "${workspaceFolder}/day11.ts",
+            "program": "${workspaceFolder}/day12.ts",
             "preLaunchTask": "tsc: build - tsconfig.json",
             "outFiles": [
                 "${workspaceFolder}/out/*.js"

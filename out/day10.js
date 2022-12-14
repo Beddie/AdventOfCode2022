@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const puzzlePath = "puzzleinput/day10.txt";
-const puzzleOutputPath = "puzzleinput/day10output.txt";
+const puzzleOutputPath = "puzzleoutput/day10output.txt";
 var Instruction;
 (function (Instruction) {
     Instruction[Instruction["noop"] = 1] = "noop";

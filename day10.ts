@@ -1,6 +1,6 @@
 import { fstat, readFileSync, writeFileSync } from "fs";
 const puzzlePath = "puzzleinput/day10.txt";
-const puzzleOutputPath = "puzzleinput/day10output.txt";
+const puzzleOutputPath = "puzzleoutput/day10output.txt";
 
 enum Instruction {
     noop = 1,
