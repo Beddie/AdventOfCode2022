@@ -56,20 +56,76 @@ async function day13(part: number, print: boolean) {
     return isOrdered
   }
 
-  let tyrr = packetStringPairs.forEach((x, i) => {
-    let leftSide = x[0]
-    let rightSide = x[1]
-    let leftArray = JSON.parse(leftSide)
-    let rightArray = JSON.parse(rightSide)
-    let leuk = `${leftArray} vs ${rightArray} = `
-    let isOrdered = CompareArrays(leftArray, rightArray)
-    answer += isOrdered ? (i + 1) : 0
-    console.log(`${leuk} = ${isOrdered} `)
-  })
+  if (part == 1) {
+    let tyrr = packetStringPairs.forEach((x, i) => {
+      let leftSide = x[0]
+      let rightSide = x[1]
+      let leftArray = JSON.parse(leftSide)
+      let rightArray = JSON.parse(rightSide)
+      let leuk = `${leftArray} vs ${rightArray} = `
+      let isOrdered = CompareArrays(leftArray, rightArray)
+      answer += isOrdered ? (i + 1) : 0
+      if (print) {
+        console.log(`${leuk} = ${isOrdered} `)
+      }
+    })
+  }
+  else {
+    let ordering = true
+    packetStringPairs.push(["[[2]]", "[[6]]"])
+    let listOfSignals = packetStringPairs.flatMap(x => x)
+
+    let runlength = ((listOfSignals.length - 1) % 2 == 0) ? ((listOfSignals.length - 1)) : (listOfSignals.length)
+
+    while (ordering) {
+      let haschange = false;
+      for (let index = 0; index < runlength; index = index + 2) {
+        let leftSide = listOfSignals[index]
+        let rightSide = listOfSignals[index + 1]
+        if (leftSide && rightSide) {
+          let leftArray = JSON.parse(leftSide)
+          let rightArray = JSON.parse(rightSide)
+          let isOrdered = CompareArrays(leftArray, rightArray)
+
+          if (!isOrdered) {
+            let temp = listOfSignals[index];
+            listOfSignals[index] = listOfSignals[index + 1];
+            listOfSignals[index + 1] = temp;
+            haschange = true
+          }
+        }
+      }
+      for (let index = 1; index < runlength; index = index + 2) {
+        let leftSide = listOfSignals[index]
+        let rightSide = listOfSignals[index + 1]
+        if (leftSide && rightSide) {
+          let leftArray = JSON.parse(leftSide)
+          let rightArray = JSON.parse(rightSide)
+          let isOrdered = CompareArrays(leftArray, rightArray)
+
+          if (!isOrdered) {
+            let temp = listOfSignals[index];
+            listOfSignals[index] = listOfSignals[index + 1];
+            listOfSignals[index + 1] = temp;
+            haschange = true
+          }
+        }
+      }
+
+      ordering = haschange
+    }
+    let indexOf2 = listOfSignals.indexOf('[[2]]', 0) + 1;
+    let indexOf6 = listOfSignals.indexOf('[[6]]', 0) + 1;
+    answer = indexOf2 * indexOf6;
+    if (print) {
+      let list = listOfSignals.join('\n')
+      console.log(list);
+    }
+  }
   return answer
 }
 
-Promise.all([day13(1, true)]).then((answer) => console.log(answer.join(', ')))
+Promise.all([day13(1, false), day13(2, false)]).then((answer) => console.log(answer.join(', ')))
 
 //answer1 6369
-//answer2 
+//answer2 25800
