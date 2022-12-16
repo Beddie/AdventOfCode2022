@@ -5,38 +5,61 @@ const puzzlePath = "puzzleinput/day13.txt";
 const puzzleOutputPath = "puzzleoutput/day13output.txt";
 async function day13(part, print) {
     let answer = 0;
-    let endPosition = [];
-    let startPositionPart1 = [];
-    let startPositions = [];
     const puzzlePrepare = (0, fs_1.readFileSync)(puzzlePath).toString().split('\n\n');
     const packetStringPairs = puzzlePrepare.map(lines => lines.split('\n'));
     let packetPairs = [];
-    let tyrr = packetStringPairs.forEach(x => {
-        let leftArray = JSON.parse(x[0]);
-        let rightArray = JSON.parse(x[1]);
-        let isOrdered = false;
-        packetPairs.push([leftArray, rightArray]);
-        leftArray.forEach((left, leftIndex) => {
-            let right = rightArray[leftIndex];
-            //convert to array if only one!
-            if (Number(left)) {
-                left = [left];
-            }
-            if (Number(right)) {
+    let findOrdering = true;
+    function CompareArrays(leftValue, rigthValue) {
+        let isOrdered = undefined;
+        let keeplooking = true;
+        if (leftValue === undefined || rigthValue === undefined) {
+            isOrdered = leftValue === undefined;
+            return isOrdered;
+        }
+        while (keeplooking) {
+            let left = leftValue.shift();
+            let right = rigthValue.shift();
+            if (Array.isArray(left) && Number.isInteger(right)) {
                 right = [right];
             }
-            if (Array.isArray(left) && Array.isArray(right)) {
-                //compare arrays
-                left.forEach((l, i) => {
-                    isOrdered = l < right[i];
-                });
+            if (Array.isArray(right) && Number.isInteger(left)) {
+                left = [left];
             }
-            // else if(Number(left) && Number(right)){
-            //   //compare numbers
-            // }
-            console.log(`${left} vs ${right} = ${isOrdered} `);
-        });
+            if (Array.isArray(left) && Array.isArray(right)) {
+                isOrdered = CompareArrays(left, right);
+            }
+            if (Number.isInteger(left) && Number.isInteger(right)) {
+                if (left != right) {
+                    isOrdered = left < right;
+                    return isOrdered;
+                }
+            }
+            if (left == undefined && right != undefined) {
+                isOrdered = true;
+            }
+            else if (left != undefined && right == undefined) {
+                isOrdered = false;
+            }
+            if (left == undefined && right == undefined) {
+                keeplooking = false;
+            }
+            else {
+                keeplooking = isOrdered == undefined;
+            }
+        }
+        return isOrdered;
+    }
+    let tyrr = packetStringPairs.forEach((x, i) => {
+        let leftSide = x[0];
+        let rightSide = x[1];
+        let leftArray = JSON.parse(leftSide);
+        let rightArray = JSON.parse(rightSide);
+        let leuk = `${leftArray} vs ${rightArray} = `;
+        let isOrdered = CompareArrays(leftArray, rightArray);
+        answer += isOrdered ? (i + 1) : 0;
+        console.log(`${leuk} = ${isOrdered} `);
     });
+    //findOrdering = true;
     return answer;
 }
 Promise.all([day13(1, true)]).then((answer) => console.log(answer.join(', ')));
