@@ -77,9 +77,7 @@ async function day13(part, print) {
                     let isOrdered = CompareArrays(leftArray, rightArray);
                     if (!isOrdered) {
                         let temp = listOfSignals[index];
-                        // Step 2
                         listOfSignals[index] = listOfSignals[index + 1];
-                        // Step 3
                         listOfSignals[index + 1] = temp;
                         haschange = true;
                     }
@@ -94,9 +92,7 @@ async function day13(part, print) {
                     let isOrdered = CompareArrays(leftArray, rightArray);
                     if (!isOrdered) {
                         let temp = listOfSignals[index];
-                        // Step 2
                         listOfSignals[index] = listOfSignals[index + 1];
-                        // Step 3
                         listOfSignals[index + 1] = temp;
                         haschange = true;
                     }
