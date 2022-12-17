@@ -131,7 +131,6 @@ function dropOntoGrid(dropStart, grid) {
     return [grid, cameAtRestCount];
 }
 async function day14(part, print) {
-    let answer = 0;
     const puzzlePrepare = (0, fs_1.readFileSync)(puzzlePath).toString().split('\n');
     const rocks = puzzlePrepare.map(lines => lines.replaceAll(' ', '').split('->').map(x => x.split(',').map(y => parseInt(y))));
     const grid = getGridWithRocks(rocks, part);
@@ -141,7 +140,7 @@ async function day14(part, print) {
     }
     return filledGrid[1] + (part == 2 ? 1 : 0);
 }
-Promise.all([day14(1, true)]).then((answer) => console.log(answer.join(', ')));
+Promise.all([day14(1, false), day14(2, false)]).then((answer) => console.log(answer.join(', ')));
 //answer1 1016
 //answer2 25402
 //# sourceMappingURL=day14.js.map
