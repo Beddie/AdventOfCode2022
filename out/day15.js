@@ -4,7 +4,12 @@ const fs_1 = require("fs");
 const puzzlePath = "puzzleinput/day15.txt";
 const puzzleOutputPath = "puzzleoutput/day15output.txt";
 async function day15(part, print) {
-    const beaconAndSignals = (0, fs_1.readFileSync)(puzzlePath).toString().split('\n').map(line => {
+    const sensorx = 0;
+    const sensory = 1;
+    const beaconx = 2;
+    const beacony = 3;
+    const manhattandistance = 4;
+    const beaconAndsensors = (0, fs_1.readFileSync)(puzzlePath).toString().split('\n').map(line => {
         let values = line.split('=');
         let sensorx = values[1].substring(0, values[1].indexOf(','));
         let sensory = values[2].substring(0, values[2].indexOf(':'));
@@ -24,24 +29,29 @@ async function day15(part, print) {
     let answer = 0;
     let y = 2000000;
     let uniquelistofbeacons = [];
-    beaconAndSignals.forEach((bs) => {
+    beaconAndsensors.forEach((bs) => {
         if (bs[3] == y && !uniquelistofbeacons.find(ul => ul[0] == bs[2] && ul[1] == bs[3])) {
             uniquelistofbeacons.push([bs[2], bs[3]]);
         }
     });
     let amountOfBeacons = uniquelistofbeacons.length;
-    for (let index = 0; index < beaconAndSignals.length - 1; index++) {
-        let signalBeaconDistance = heuristic(beaconAndSignals[index][0], beaconAndSignals[index][1], beaconAndSignals[index][2], beaconAndSignals[index][3]);
-        beaconAndSignals[index].push(signalBeaconDistance);
+    for (let index = 0; index < beaconAndsensors.length; index++) {
+        let sensorBeaconDistance = heuristic(beaconAndsensors[index][0], beaconAndsensors[index][1], beaconAndsensors[index][2], beaconAndsensors[index][3]);
+        beaconAndsensors[index].push(sensorBeaconDistance);
     }
+    let verhouding = 4000;
+    const beaconminX = (846 / 2) * verhouding; //0
+    const beaconmaxX = (1050 / 2) * verhouding; //4000000
+    const beaconminY = 0 * verhouding;
+    const beaconmaxY = 42 * verhouding; //4000000
     if (print) {
-        drawGrid(beaconAndSignals);
+        //drawGrid(beaconAndsensors, beaconminX, beaconmaxX, beaconminY, beaconmaxY);
     }
     if (part == 1) {
         for (let index = -4000000; index < 4000000; index++) {
             let inRadar = false;
-            beaconAndSignals.forEach(p => {
-                let pointToSensorDistance = heuristic(p[0], p[1], index, y);
+            beaconAndsensors.forEach(p => {
+                let pointToSensorDistance = heuristic(p[beaconx], p[beacony], index, y);
                 if (pointToSensorDistance <= p[4]) {
                     inRadar = true;
                 }
@@ -59,83 +69,51 @@ async function day15(part, print) {
         answer = counter - amountOfBeacons;
     }
     if (part == 2) {
-        //between all beacons
-        let beaconminX = 0;
-        let beaconminY = 0;
-        let beaconmaxX = 0;
-        let beaconmaxY = 0;
-        beaconminY = 67249;
-        beaconmaxY = 67250;
-        beaconminX = 2328400;
-        beaconmaxX = 2328500;
-        // beaconminX = beaconAndSignals.sort((bs, bs2) => bs[0] - bs2[0])[0][0]
-        // beaconminY = beaconAndSignals.sort((bs, bs2) => bs[1] - bs2[1])[0][1]
-        // beaconmaxX = beaconAndSignals.sort((bs, bs2) => bs2[0] - bs[0])[0][0]
-        // beaconmaxY = beaconAndSignals.sort((bs, bs2) => bs2[1] - bs[1])[0][1]
-        let interval = 1;
-        for (let indexy = beaconminY; indexy < beaconmaxY; indexy = indexy + interval) {
-            console.log(indexy);
-            for (let indexx = beaconminX; indexx < beaconmaxX; indexx++) {
-                let inRadar = false;
-                beaconAndSignals.forEach((p) => {
+        const rawgrid = scanAndGetRawGrid(beaconAndsensors);
+        const grid = getIntrestingCoords(rawgrid);
+        grid.forEach(coord => {
+            const x = coord[0] * 1000;
+            const y = coord[1] * 1000;
+            const beaconminX = 0;
+            const beaconminY = 0;
+            const beaconmaxX = 4000000;
+            const beaconmaxY = 4000000;
+            for (let indexy = y; indexy < y + 1002 && y < beaconmaxY + 1002; indexy++) {
+                //console.log(indexy);
+                for (let indexx = x; indexx < x + 1002 && x < beaconmaxX + 1002; indexx++) {
+                    //let breaky = indexy == 1 && indexx == 19;
+                    let inRadar = false;
+                    beaconAndsensors.forEach((p) => {
+                        if (!inRadar) {
+                            if (heuristic(p[sensorx], p[sensory], indexx, indexy) <= p[manhattandistance]) {
+                                inRadar = true;
+                                return;
+                            }
+                        }
+                    });
                     if (!inRadar) {
-                        const pointToSensorDistance = heuristic(p[0], p[1], indexx, indexy);
-                        if (pointToSensorDistance <= p[4]) {
-                            inRadar = true;
-                            return;
-                        }
-                    }
-                });
-                //let logline = `Sensor x:${p[0]} y:${p[1]}, Beacon x:${p[2]} y:${p[3]} = distance ${heuristic(p[0], p[1], p[2], p[3])}`
-                //console.log(logline)
-                if (!inRadar) {
-                    let countinradar = 0;
-                    for (let x = -1; x < 2; x = x + 2) {
-                        let isInradar = false;
-                        beaconAndSignals.forEach((p) => {
-                            if (!isInradar) {
-                                const pointToSensorDistance = heuristic(p[0], p[1], indexx + x, indexy);
-                                if (pointToSensorDistance <= p[4]) {
-                                    isInradar = true;
-                                    return;
-                                }
-                            }
-                        });
-                        if (isInradar) {
-                            countinradar += 1;
-                        }
-                    }
-                    if (countinradar == 2) {
-                        let logline = `Sensor x:${indexx} y:${indexy}.`;
-                        answer = (4000000 * indexx) + indexy;
+                        let logline = `Sensor x:${indexx} y:${indexy}..`;
                         console.log(logline);
-                        for (let y = -1; y < 2; y = y + 2) {
-                            let isInradar = false;
-                            beaconAndSignals.forEach((p, i) => {
-                                let pointToSensorDistance = heuristic(p[0], p[1], indexx, indexy + y);
-                                if (pointToSensorDistance <= p[4]) {
-                                    isInradar = true;
-                                    return;
-                                }
-                            });
-                            if (isInradar) {
-                                countinradar += 1;
-                            }
-                        }
-                        if (countinradar == 4) {
-                            let logline = `Sensor x:${indexx} y:${indexy}`;
-                            answer = (4000000 * indexx) + indexy;
-                            console.log(logline);
-                        }
                     }
                 }
             }
-        }
+        });
+        //between all beacons
+        // beaconminY = 67249
+        // beaconmaxY = 67250
+        // beaconminX = 2328400
+        // beaconmaxX = 2328500
+        // beaconminX = beaconAndsensors.sort((bs, bs2) => bs[0] - bs2[0])[0][0]
+        // beaconminY = beaconAndsensors.sort((bs, bs2) => bs[1] - bs2[1])[0][1]
+        // beaconmaxX = beaconAndsensors.sort((bs, bs2) => bs2[0] - bs[0])[0][0]
+        // beaconmaxY = beaconAndsensors.sort((bs, bs2) => bs2[1] - bs[1])[0][1]
+        //scan a grid 3x3. If 3 numbers store topleft and topleft x+y
+        const interval = 1;
     }
     return answer;
 }
 Promise.all([day15(2, true)]).then((answer) => console.log(answer.join(', ')));
-function drawGrid(beaconAndSignals) {
+function drawGrid(beaconAndsensors, beaconminX, beaconmaxX, beaconminY, beaconmaxY) {
     const sensorx = 0;
     const sensory = 1;
     const beaconx = 2;
@@ -146,43 +124,57 @@ function drawGrid(beaconAndSignals) {
         let d2 = Math.abs(position1y - position0y);
         return d1 + d2;
     }
-    let beaconminX = beaconAndSignals.sort((bs, bs2) => bs[sensorx] - bs2[sensorx])[0][sensorx];
-    let beaconminY = beaconAndSignals.sort((bs, bs2) => bs[sensory] - bs2[sensory])[0][sensory];
-    let beaconmaxX = beaconAndSignals.sort((bs, bs2) => bs2[sensorx] - bs[sensorx])[0][sensorx];
-    let beaconmaxY = beaconAndSignals.sort((bs, bs2) => bs2[sensory] - bs[sensory])[0][sensory];
-    beaconminY = 67249;
-    beaconmaxY = 67250;
-    beaconminX = 2328400;
-    beaconmaxX = 2328500;
+    // let beaconminX = beaconAndsensors.sort((bs, bs2) => bs[beaconx] - bs2[beaconx])[0][beaconx]
+    // let beaconminY = beaconAndsensors.sort((bs, bs2) => bs[beacony] - bs2[beacony])[0][beacony]
+    // let beaconmaxX = beaconAndsensors.sort((bs, bs2) => bs2[beaconx] - bs[beaconx])[0][beaconx]
+    // let beaconmaxY = beaconAndsensors.sort((bs, bs2) => bs2[beacony] - bs[beacony])[0][beacony]
+    // beaconminY = 2475 * 1000
+    // beaconmaxY = 2477 * 1000
+    // beaconminX = 5649 * 500
+    // beaconmaxX = 5653 * 500
+    // beaconminY = 2374 * 1000
+    // beaconmaxY = 2598 * 1000
+    // beaconminX = 5440 * 500
+    // beaconmaxX = 6028 * 500
+    let maxnumber = 4000000;
+    let interval = 1000;
+    //let interval = 1
+    let verhouding = 4000;
+    // beaconminX = (1219 / 2) * verhouding  //0
+    // beaconmaxX = (1222 / 2) * verhouding //4000000
+    // beaconminY = 936 * verhouding
+    // beaconmaxY = 938 * verhouding //4000000
     // 2328628 67000
     let ok = 54;
-    let maxnumber = 4000000;
     let xindexFrom = 0;
     let xindexTo = 1000;
-    let interval = 1;
     let gridlines = "";
-    let arraylength = (beaconmaxX - beaconminX) / interval;
-    let grid = [...Array(arraylength)].map(e => Array(arraylength));
+    //let arraylength = maxnumber / interval
+    //let grid = [...Array(arraylength)].map(e => Array(arraylength));
     for (let yindex = beaconminY; yindex < beaconmaxY; yindex = yindex + interval) {
         let gridline = "";
         for (let xindex = beaconminX; xindex < beaconmaxX; xindex = xindex + interval) {
+            let numberofbeacon;
             let inRadar = false;
-            beaconAndSignals.forEach((p) => {
+            beaconAndsensors.forEach((p, i) => {
                 if (!inRadar) {
-                    const pointToSensorDistance = heuristic(p[0], p[1], xindex, yindex);
+                    const pointToSensorDistance = heuristic(p[sensorx], p[sensory], xindex, yindex);
                     if (pointToSensorDistance <= p[4]) {
                         inRadar = true;
+                        numberofbeacon = String(i);
                         return;
                     }
                 }
             });
             let printVal;
             if (inRadar) {
-                printVal = '#';
+                // printVal = numberofbeacon > 9 ? numberofbeacon-10 : numberofbeacon > 19 ? numberofbeacon-20 : numberofbeacon > 29 ? numberofbeacon-30 : numberofbeacon //String(numberofbeacon).padStart(2,"0") numberofbeacn
+                //do nothing
+                printVal = numberofbeacon.padStart(2, "0");
             }
             else {
                 console.log(xindex, yindex);
-                printVal = '.';
+                printVal = 'XX';
             }
             gridline += printVal;
         }
@@ -191,7 +183,80 @@ function drawGrid(beaconAndSignals) {
     }
     console.log(gridlines);
     (0, fs_1.writeFileSync)(puzzleOutputPath, gridlines);
+    console.log("done");
+}
+function scanAndGetRawGrid(beaconAndsensors) {
+    const sensorx = 0;
+    const sensory = 1;
+    const beaconx = 2;
+    const beacony = 3;
+    const manhattandistance = 4;
+    function heuristic(position0x, position0y, position1x, position1y) {
+        let d1 = Math.abs(position1x - position0x);
+        let d2 = Math.abs(position1y - position0y);
+        return d1 + d2;
+    }
+    let beaconminX = 0;
+    let beaconminY = 0;
+    let beaconmaxX = 4000000;
+    let beaconmaxY = 4000000;
+    let interval = 1000;
+    let verhouding = 4000;
+    let intrestingGrid = Array.from(Array(verhouding), () => new Array(verhouding));
+    for (let yindex = beaconminY; yindex < beaconmaxY; yindex = yindex + interval) {
+        let gridline = "";
+        for (let xindex = beaconminX; xindex < beaconmaxX; xindex = xindex + interval) {
+            let numberofbeacon;
+            let inRadar = false;
+            beaconAndsensors.forEach((p, i) => {
+                if (!inRadar) {
+                    const pointToSensorDistance = heuristic(p[sensorx], p[sensory], xindex, yindex);
+                    if (pointToSensorDistance <= p[4]) {
+                        inRadar = true;
+                        numberofbeacon = i;
+                        return;
+                    }
+                }
+            });
+            if (inRadar) {
+                // printVal = numberofbeacon > 9 ? numberofbeacon-10 : numberofbeacon > 19 ? numberofbeacon-20 : numberofbeacon > 29 ? numberofbeacon-30 : numberofbeacon //String(numberofbeacon).padStart(2,"0") numberofbeacn
+                //do nothing
+                intrestingGrid[xindex / interval][yindex / interval] = numberofbeacon;
+            }
+        }
+    }
+    //drawIntrestingGrid(intrestingGrid);
+    return intrestingGrid;
+}
+function drawIntrestingGrid(intrestingGrid) {
+    let gridlines = "";
+    for (let yindex = 0; yindex < intrestingGrid.length - 1; yindex++) {
+        let gridline = "";
+        for (let xindex = 0; xindex < intrestingGrid[0].length - 1; xindex++) {
+            gridline += String(intrestingGrid[xindex][yindex]).padStart(2, "0");
+        }
+        gridline += "\n";
+        gridlines += gridline;
+    }
+    console.log(gridlines);
+    (0, fs_1.writeFileSync)(puzzleOutputPath, gridlines);
+    console.log("done intresting grid");
+}
+function getIntrestingCoords(rawgrid) {
+    let intrestingCoords = [];
+    for (let y = 0; y < rawgrid.length - 2; y++) {
+        for (let x = 0; x < rawgrid[0].length - 2; x++) {
+            const curx = rawgrid[x][y];
+            const nextx = rawgrid[x + 1][y];
+            const belowx = rawgrid[x][y + 1];
+            const diagfromx = rawgrid[x + 1][y + 1];
+            if (curx != nextx || curx != belowx || curx != diagfromx) {
+                intrestingCoords.push([x, y]);
+            }
+        }
+    }
+    return intrestingCoords;
 }
 //answer1 4725496
-//answer2 
+//answer2 9313792067249 // to low!
 //# sourceMappingURL=day15.js.map
