@@ -69,11 +69,14 @@ async function day15(part, print) {
         answer = counter - amountOfBeacons;
     }
     if (part == 2) {
+        console.log("start part 2");
         const rawgrid = scanAndGetRawGrid(beaconAndsensors);
         const grid = getIntrestingCoords(rawgrid);
+        console.log("grid length: ", grid.length);
         grid.forEach(coord => {
             const x = coord[0] * 1000;
             const y = coord[1] * 1000;
+            console.log(x, y);
             const beaconminX = 0;
             const beaconminY = 0;
             const beaconmaxX = 4000000;
@@ -256,6 +259,9 @@ function getIntrestingCoords(rawgrid) {
         }
     }
     return intrestingCoords;
+}
+function getMoreIntrestingCoords(coolgrid, rawgrid) {
+    throw new Error("Function not implemented.");
 }
 //answer1 4725496
 //answer2 9313792067249 // to low!
