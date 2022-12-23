@@ -1,6 +1,5 @@
-import { fstat, readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 const puzzlePath = "puzzleinput/day16.txt";
-const puzzleOutputPath = "puzzleoutput/day16output.txt";
 
 class Valve {
   constructor(name: string, flowrate: number, tunnelsToValve) {
@@ -15,102 +14,35 @@ class Valve {
   public GridPoint: any;
 }
 
-function GridPoint(valve: Valve, valves: Valve[]) {
-  this.f = 0; //total cost function
-  this.g = 0; //cost function from start to the current grid point
-  this.h = 0; //heuristic estimated cost function from current grid point to the goal
-  this.neighbors = []; // neighbors of the current grid point
-  this.parent = undefined; // immediate source of the current grid point
-
-  // update neighbors array for a given grid point
-  this.updateNeighbors = function (valves: Valve[]) {
-    //let currentHeight = hills[j][i]
-    let neighbourvalves = valves.filter(v => valve.TunnelToValve.includes(v.Name) === true);
-    neighbourvalves.forEach(nv => {
-      this.neighbors.push(nv);
-    })
-  };
-}
-
-class Pathfinder {
-
-  private endPosition = [];
-  private startPositionPart1 = [];
-  private startPositions = [];
-
-  private openSet = []; //array containing unevaluated grid points
-  private closedSet = []; //array containing completely evaluated grid points
-  private path = [];
-
-  constructor(valves: Valve[]) {
-    this.init(valves);
-  }
-  //constructor function to create all the grid points as objects containind the data for the points
-
-
-  //initializing the pipelines
-  private init(valves: Valve[]) {
-    valves.forEach(v => v.GridPoint = new GridPoint(v, valves));
-    valves.forEach(v => v.GridPoint.updateNeighbors(valves));
-    let start = valves.find(v => v.Name == "AA");
-    this.openSet.push(start);
+class Step {
+  constructor(valveName: string, minute: number, flowrate?: number, openValves?: string[], previousValve?: string, openValveMinute?: number[][]) {
+    this.ValveName = valveName;
+    this.Minute = minute
+    this.TotalFlowRate = flowrate;
+    this.OpenValves = openValves;
+    this.PreviousValve = previousValve;
+    this.OpenValvesMinute = openValveMinute
   }
 
-  //A star search implementation
-  public search(valves: Valve[]) {
-    let maxMinutes = 30;
-    while (this.openSet.length > 0) {
-      //assumption lowest index is the first one to begin with
-      let lowestIndex = 0;
-      for (let i = 0; i < this.openSet.length; i++) {
-        if (this.openSet[i].GridPoint.f < this.openSet[lowestIndex].GridPoint.f) {
-          lowestIndex = i;
-        }
-      }
-      let current = this.openSet[lowestIndex].GridPoint;
+  public ValveName: string;
+  public TotalFlowRate?: number;
+  public Minute: number;
+  public OpenValves: string[];
+  public OpenValvesMinute: number[][];
+  public PreviousValve: string;
 
-      if (this.closedSet.length === maxMinutes) {
-        let temp = current;
-        this.path.push(temp);
-        while (temp.parent) {
-          this.path.push(temp.parent);
-          temp = temp.parent;
-        }
-        // return the traced path
-        return this.path.reverse();
-      }
+  public TotalPressure(flowToMinutes: number): number {
+    let sum = 0;
 
-      //remove current from openSet
-      this.openSet.splice(lowestIndex, 1);
-      //add current to closedSet
-      this.closedSet.push(current);
-
-      let neighbors = current.neighbors;
-
-      for (let i = 0; i < neighbors.length; i++) {
-        let neighbor = neighbors[i];
-
-        if (!this.closedSet.includes(neighbor)) {
-          let possibleG = current.g + 1;
-
-          if (!this.openSet.includes(neighbor)) {
-            this.openSet.push(neighbor);
-          } else if (possibleG >= neighbor.g) {
-            continue;
-          }
-
-          neighbor.g = possibleG;
-          //neighbor.h = heuristic(neighbor, end);
-          neighbor.f = neighbor.g + neighbor.h;
-          neighbor.parent = current;
-        }
-      }
+    if (!this.OpenValvesMinute) return 0;
+    for (let index = 0; index < this.OpenValvesMinute.length; index++) {
+      const minute = this.OpenValvesMinute[index][0];
+      const flowrate = this.OpenValvesMinute[index][1];
+      sum += (flowToMinutes - minute) * flowrate
     }
-    return undefined;
+    return sum;
   }
 }
-// Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
-
 
 async function day16(part: number, print: boolean) {
 
@@ -121,11 +53,76 @@ async function day16(part: number, print: boolean) {
     return new Valve(name, flowrate, tunnelstovalve)
   })
 
-  const pathfinder = new Pathfinder(scanOutput);
-  pathfinder.search(scanOutput);
+  let minute = 0;
+  let newPaths: Step[] = [new Step("AA", 0)]
+
+  while (minute <= 30) {
+
+    if (minute == 24) {
+      newPaths = newPaths.filter(np => np.OpenValves != undefined && np.OpenValves.length > 2);
+
+      newPaths.sort((a,b) => b.TotalPressure(30) - a.TotalPressure(30))
+      newPaths.splice(1000);
+    }
+
+    let oldPaths = newPaths.filter(np => np.Minute == minute)
+    minute++;
+
+    console.log(minute);
+    //logPath(oldPaths, minute);
+    newPaths = [];
+    oldPaths.forEach(oldPath => {
+      let openValves = oldPath.OpenValves ? oldPath.OpenValves : []; //oldPath.OpenValves;
+      let currentValve = scanOutput.find(v => v.Name == oldPath.ValveName);
+      let valves = scanOutput.filter(v => currentValve.TunnelToValve.includes(v.Name));
+      let currentFlow = oldPath.TotalFlowRate ?? 0;
+      valves.filter(v => v.Name != oldPath.PreviousValve).forEach(valve => {
+        let openValvesMinute = oldPath.OpenValvesMinute ? oldPath.OpenValvesMinute : null;
+          newPaths.push(new Step(valve.Name, minute, currentFlow, openValves, currentValve.Name, openValvesMinute))
+      })
+
+      
+      if (currentValve.FlowRate > 0 && (!openValves || !openValves.find(o => o === currentValve.Name))) {
+          let openValvesMinute = oldPath.OpenValvesMinute ? [...oldPath.OpenValvesMinute] : null; //oldPath.OpenValvesMinute;
+          let newOpenValves = [...openValves]
+          // if (openValvesMinute?.length > 6) {
+          //   let b = 1;
+          // }
+
+          newOpenValves.push(currentValve.Name)
+          newOpenValves = newOpenValves.sort()
+          let minuteWithFlowrate = [minute, currentValve.FlowRate];
+
+          if (!openValvesMinute) {
+            openValvesMinute = [minuteWithFlowrate];
+          }
+          else {
+            openValvesMinute.push(minuteWithFlowrate);
+          }
+
+          let newFlow = currentFlow + currentValve.FlowRate
+          newPaths.push(new Step(currentValve.Name, minute, newFlow, newOpenValves, currentValve.Name, openValvesMinute))
+        }
+      
+    })
+  }
+
+  //let steps = newPaths.filter(np => np.Minute == minute)
+  let highPath = newPaths.sort((o1, o2) => o2.TotalPressure(30) - o1.TotalPressure(30))[0];
+
+ // let hp = newPaths.filter(a => a.TotalFlowRate == highPath.TotalFlowRate)[0];
+  let totalPressure = highPath.TotalPressure(30);
+  return totalPressure;
+}
+
+
+
+function logPath(oldPaths: Step[], minute: number) {
+  let highPath = oldPaths.sort((o1, o2) => o2.TotalFlowRate - o1.TotalFlowRate)[0]
+  console.log(`minute:${minute} totalflow:${highPath.TotalFlowRate} openValves: ${highPath.OpenValves?.join(' ,')}`)
 }
 
 Promise.all([day16(1, true)]).then((answer) => console.log(answer.join(', ')))
 
-//answer1 
+//answer1 2077
 //answer2 
